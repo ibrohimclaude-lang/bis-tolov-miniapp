@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>BIS To'lov</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&family=Playfair+Display:wght@500;600&family=Libre+Caslon+Text:wght@400&display=swap" rel="stylesheet">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&family=Playfair+Display:wght@500;600&family=Libre+Caslon+Text:wght@400&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 /* Five fixed brand themes (not Telegram's colors), picked in Sozlamalar; html[data-theme] selects one.
@@ -273,6 +273,12 @@ function avatar(name) {
 }
 // dashData: {totals, lines, history} from the "dash" action; null until loaded or when the API is older
 let clients = [], dashData = null, dashErr = "", view = { name: "panel", filter: "debt" }, busy = false;
+// stale: the screen shows the copy saved on this phone while the sheet is read again (Apps Script takes ~4-5 s)
+let stale = false;
+const CACHE = "bis-data-v1";
+function readCache() { try { const c = JSON.parse(localStorage.getItem(CACHE) || "null"); return c && Array.isArray(c.clients) ? c : null; } catch (e) { return null; } }
+function writeCache() { try { localStorage.setItem(CACHE, JSON.stringify({ at: Date.now(), clients, dash: dashData })); } catch (e) {} }
+function dropCache() { try { localStorage.removeItem(CACHE); } catch (e) {} }
 
 async function api(action, body) {
   const r = await fetch(API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -324,10 +330,10 @@ function navBar() {
 }
 
 function topBar(s, title, sub) {
-  const refresh = h("button", { class: "iconbtn", "aria-label": "Yangilash", onclick: async () => { refresh.classList.add("spin"); await load(true); refresh.classList.remove("spin"); if (isTab(view.name)) render(); } }, icon("refresh"));
+  const refresh = h("button", { class: "iconbtn" + (stale ? " spin" : ""), "aria-label": "Yangilash", onclick: async () => { refresh.classList.add("spin"); await load(true); refresh.classList.remove("spin"); if (isTab(view.name)) render(); } }, icon("refresh"));
   const gear = h("button", { class: "iconbtn", "aria-label": "Sozlamalar", onclick: () => { haptic("tap"); go({ name: "settings", from: isTab(view.name) ? view.name : "panel" }); } }, icon("gear"));
   s.append(h("div", { class: "top" }, h("div", { class: "brand" }, h("div", { class: "logo", "aria-hidden": "true" }, "BIS"),
-    h("div", {}, h("b", {}, title || "To'lovlar"), h("small", {}, sub || "Google Sheets bilan bog'langan"))),
+    h("div", {}, h("b", {}, title || "To'lovlar"), h("small", {}, stale ? "Yangilanmoqda…" : sub || "Google Sheets bilan bog'langan"))),
     h("div", { style: "display:flex;gap:8px" }, gear, refresh)));
 }
 
@@ -662,13 +668,26 @@ function renderHistory(s) {
 }
 
 async function load(quiet) {
-  if (!quiet) { const s = h("div", { class: "screen" }); topBar(s, "Dashboard", "Yuklanmoqda…"); s.append(h("div", { class: "skel hero-s" }), h("div", { class: "list" }, [1, 2, 3, 4].map(() => h("div", { class: "skel" })))); app.replaceChildren(s); }
+  if (!quiet) {
+    const saved = readCache();
+    if (saved) { clients = saved.clients; dashData = saved.dash; stale = true; render(); quiet = true; }
+    else { const s = h("div", { class: "screen" }); topBar(s, "Dashboard", "Yuklanmoqda…"); s.append(h("div", { class: "skel hero-s" }), h("div", { class: "list" }, [1, 2, 3, 4].map(() => h("div", { class: "skel" })))); app.replaceChildren(s); }
+  }
+  // a fresh copy replaces the saved one on screen, unless the user is typing in a field
+  const redraw = () => { if (isTab(view.name) && !(document.activeElement && /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName))) render(); };
   try {
     const [c, d] = await Promise.all([api("clients"), api("dash").catch((e) => { dashErr = e.message; return null; })]);
     clients = c.clients;
     if (d) { dashData = { totals: d.totals, lines: d.lines, history: d.history }; dashErr = ""; }
-    if (!quiet) render();
+    const wasStale = stale;
+    stale = false;
+    writeCache();
+    if (!quiet) render(); else if (wasStale) redraw();
   } catch (e) {
+    const wasStale = stale;
+    stale = false;
+    if (/Ruxsat|imzo|Sessiya/.test(e.message)) { dropCache(); clients = []; dashData = null; quiet = false; }
+    else if (wasStale) { redraw(); return; }
     if (quiet) return;
     const s = h("div", { class: "screen" }); topBar(s);
     s.append(h("div", { class: "empty" }, icon("alert"), h("div", {}, e.message)), h("button", { class: "btn primary", onclick: () => load() }, icon("refresh"), "Qayta urinish"));
