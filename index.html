@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>BIS To'lov</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&family=Playfair+Display:wght@500;600&family=Libre+Caslon+Text:wght@400&display=swap" rel="stylesheet">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+/* Five fixed brand themes (not Telegram's colors), picked in Sozlamalar; html[data-theme] selects one.
+   --hero-* style the Panel card, --num-* the large numbers, --s1..3 and --a1..3 the share and debt-age charts. */
+:root,[data-theme=platinum]{
+  color-scheme:dark;
+  --bg:#0A0F1C;--bg-img:radial-gradient(120% 50% at 50% -8%,#1B2944 0%,#0A0F1C 60%,#06080F 100%);
+  --card:#111A2C;--raised:#1C2840;--line:#1F2B44;--soft:#0D1424;
+  --text:#E9EDF5;--hint:#8C97AD;
+  --accent:#D3D9E4;--on-accent:#0C111C;--gold:#C7D2E8;
+  --debt:#F08A80;--ok:#9FD8C0;--warn:#E8C27A;
+  --hero-bg:linear-gradient(125deg,#F4F6FA 0%,#C9CFDA 22%,#EEF1F6 40%,#AEB6C4 62%,#E3E7EE 80%,#B7BECA 100%);
+  --hero-text:#0C111C;--hero-hint:rgba(12,17,28,.62);--hero-frame:transparent;--hero-border:rgba(255,255,255,.5);--hero-bar:#0C111C;
+  --num-font:Inter,sans-serif;--num-weight:300;
+  --nav-bg:rgba(17,26,44,.92);--nav-on:#F2F5FA;--header:#0A0F1C;
+  --chart:#C7D2E8;--s1:#E9EDF5;--s2:#7E93C2;--s3:#4A5D86;--a1:#E8C27A;--a2:#E9A178;--a3:#F08A80
+}
+[data-theme=noir]{
+  color-scheme:dark;
+  --bg:#0B0B0C;--bg-img:none;
+  --card:#131314;--raised:#1E1D1B;--line:#262420;--soft:#101011;
+  --text:#EDE7DA;--hint:#8E877A;
+  --accent:#D6BD8A;--on-accent:#0B0B0C;--gold:#D6BD8A;
+  --debt:#E0907F;--ok:#B9D3A8;--warn:#E3C27E;
+  --hero-bg:linear-gradient(135deg,#2A2A2C 0%,#121213 45%,#1E1E20 70%,#0E0E0F 100%);
+  --hero-text:#EDE7DA;--hero-hint:#8E877A;--hero-frame:transparent;--hero-border:#3A3529;--hero-bar:#D6BD8A;
+  --num-font:Inter,sans-serif;--num-weight:200;
+  --nav-bg:rgba(19,19,20,.94);--nav-on:#D6BD8A;--header:#0B0B0C;
+  --chart:#D6BD8A;--s1:#D6BD8A;--s2:#8E877A;--s3:#4E4A42;--a1:#E3C27E;--a2:#E3A47E;--a3:#E0907F
+}
+[data-theme=ivory]{
+  color-scheme:light;
+  --bg:#F6F2EA;--bg-img:none;
+  --card:#FFFDF8;--raised:#ECE5D8;--line:#E6DFD1;--soft:#EFE9DD;
+  --text:#0F1B33;--hint:#7C7668;
+  --accent:#0F1B33;--on-accent:#F4EFE4;--gold:#B8975A;
+  --debt:#A23B2A;--ok:#2E7D5B;--warn:#A8761E;
+  --hero-bg:linear-gradient(140deg,#13254A 0%,#0F1B33 60%,#1A2E58 100%);
+  --hero-text:#F4EFE4;--hero-hint:#C9C2B0;--hero-frame:rgba(201,169,106,.4);--hero-border:#0F1B33;--hero-bar:#C9A96A;
+  --num-font:"Playfair Display",Georgia,serif;--num-weight:500;
+  --nav-bg:rgba(255,253,248,.95);--nav-on:#0F1B33;--header:#F6F2EA;
+  --chart:#0F1B33;--s1:#0F1B33;--s2:#B8975A;--s3:#C9C2B0;--a1:#C9A96A;--a2:#C6703F;--a3:#A23B2A
+}
+[data-theme=emerald]{
+  color-scheme:dark;
+  --bg:#0C1F19;--bg-img:radial-gradient(120% 50% at 50% -5%,#173B30 0%,#0C1F19 55%,#08140F 100%);
+  --card:#11281F;--raised:#1A3A2E;--line:#21402F;--soft:#0E231B;
+  --text:#EFE9DB;--hint:#93A39A;
+  --accent:#D2B57A;--on-accent:#0C1F19;--gold:#D2B57A;
+  --debt:#E39B85;--ok:#9FD3B5;--warn:#E3C27E;
+  --hero-bg:linear-gradient(135deg,#1F5A47 0%,#123A2E 50%,#1A4D3D 100%);
+  --hero-text:#EFE9DB;--hero-hint:#B9C8BF;--hero-frame:transparent;--hero-border:rgba(210,181,122,.45);--hero-bar:#D2B57A;
+  --num-font:"Libre Caslon Text",Georgia,serif;--num-weight:400;
+  --nav-bg:rgba(8,20,15,.94);--nav-on:#D2B57A;--header:#0C1F19;
+  --chart:#D2B57A;--s1:#D2B57A;--s2:#5FA78A;--s3:#93A39A;--a1:#E3C27E;--a2:#E3A47E;--a3:#E39B85
+}
+[data-theme=bordo]{
+  color-scheme:dark;
+  --bg:#250A11;--bg-img:radial-gradient(120% 50% at 50% -5%,#4A1623 0%,#250A11 55%,#16070B 100%);
+  --card:#2E0F17;--raised:#401722;--line:#4A1D29;--soft:#2A0D14;
+  --text:#F1E6E2;--hint:#B9A3A5;
+  --accent:#D6B67A;--on-accent:#250A11;--gold:#D6B67A;
+  --debt:#F2A08F;--ok:#A9D6B8;--warn:#E8C98A;
+  --hero-bg:linear-gradient(135deg,#6E1E30 0%,#3F0F1B 55%,#5A1828 100%);
+  --hero-text:#F1E6E2;--hero-hint:#D8BFC2;--hero-frame:transparent;--hero-border:rgba(214,182,122,.5);--hero-bar:#D6B67A;
+  --num-font:"Playfair Display",Georgia,serif;--num-weight:500;
+  --nav-bg:rgba(22,7,11,.94);--nav-on:#D6B67A;--header:#250A11;
+  --chart:#D6B67A;--s1:#D6B67A;--s2:#C46A7E;--s3:#B9A3A5;--a1:#E8C98A;--a2:#E8A07E;--a3:#F2A08F
+}
+:root{
+  --debt-soft:color-mix(in srgb,var(--debt) 14%,transparent);--ok-soft:color-mix(in srgb,var(--ok) 14%,transparent);
+  --accent-soft:color-mix(in srgb,var(--accent) 16%,transparent);
+  --r-lg:18px;--r:14px;--r-sm:10px;--ease:cubic-bezier(.2,.8,.2,1);--fast:160ms;--mid:260ms
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text)}
+body{background-image:var(--bg-img);background-attachment:fixed;background-repeat:no-repeat}
+.num{font-family:var(--num-font);font-weight:var(--num-weight);letter-spacing:-.01em}
+body{font:16px/1.45 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-feature-settings:"tnum" 1,"cv11" 1;-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.ic{width:20px;height:20px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+main{max-width:640px;margin:0 auto;padding:max(12px,env(safe-area-inset-top)) 16px calc(112px + env(safe-area-inset-bottom))}
+.screen{animation:in var(--mid) var(--ease)}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 2px 14px}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{width:36px;height:36px;border-radius:8px;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font-weight:700;font-size:13px;letter-spacing:.02em}
+.brand b{font-size:18px;font-weight:700;display:block;line-height:1.1}.brand small{color:var(--hint);font-size:12.5px}
+.iconbtn{width:44px;height:44px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--text);display:grid;place-items:center;transition:transform var(--fast) var(--ease),background var(--fast)}
+.iconbtn:active{transform:scale(.94)}
+.spin .ic{animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+/* dashboard */
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.kpi{border-radius:var(--r);padding:12px;background:var(--card);border:1px solid var(--line);min-width:0}
+.kpi .l{font-size:12.5px;color:var(--hint)}
+.kpi .v{font-size:22px;font-family:var(--num-font);font-weight:var(--num-weight);letter-spacing:-.01em;margin-top:4px;white-space:nowrap}
+.kpi .d{font-size:12px;color:var(--hint);margin-top:1px}
+.hero{position:relative;overflow:hidden;border-radius:20px;padding:18px 18px 16px;margin-bottom:10px;background:var(--hero-bg);color:var(--hero-text);border:1px solid var(--hero-border);box-shadow:0 16px 34px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08)}
+.hero::before{content:"";position:absolute;inset:7px;border-radius:14px;border:1px solid var(--hero-frame);pointer-events:none}
+.hero .cap{font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--hero-hint);font-weight:600}
+.hero .top3{display:flex;justify-content:space-between;align-items:center}
+.hero .brandmark{font-weight:700;letter-spacing:.3em;font-size:12px}
+.hero .sum{font-size:34px;line-height:1.1;margin:14px 0 2px;white-space:nowrap}
+.hero .unit{font-size:12.5px;color:var(--hero-hint)}
+.hero .track{height:3px;border-radius:2px;background:color-mix(in srgb,var(--hero-text) 18%,transparent);margin-top:14px}
+.hero .track i{display:block;height:100%;border-radius:2px;background:var(--hero-bar)}
+.hero .foot{display:flex;justify-content:space-between;font-size:11.5px;color:var(--hero-hint);margin-top:7px;letter-spacing:.04em}
+.kpi .d.good{color:var(--ok)}
+.card{border-radius:var(--r);padding:12px 14px;background:var(--card);border:1px solid var(--line);margin-bottom:10px}
+.ct{display:flex;justify-content:space-between;align-items:baseline;font-size:14px;font-weight:600;margin-bottom:8px}
+.ct small{font-size:12px;color:var(--hint);font-weight:500}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart .ax{display:flex;font-size:11px;color:var(--hint);margin-top:4px}.chart .ax span{flex:1;text-align:center}
+.share{display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;color:var(--hint);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.age{display:grid;grid-template-columns:44px 1fr 28px;align-items:center;gap:8px;font-size:13px;margin:6px 0}
+.age .tr{height:8px;border-radius:4px;background:var(--line)}.age .tr i{display:block;height:100%;border-radius:4px}
+.age b{text-align:right}
+.toprow{display:flex;align-items:center;gap:10px;width:100%;padding:10px 0;border:0;border-top:1px solid var(--line);background:none;text-align:left;font-size:14px;min-height:44px}
+.toprow:first-of-type{border-top:0}
+.toprow .n{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.toprow b{color:var(--debt)}
+.link{border:0;background:none;color:var(--accent);font-weight:600;font-size:13px;padding:6px 0;min-height:32px}
+/* bottom navigation */
+.nav{position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:20;max-width:616px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);background:var(--nav-bg);border:1px solid var(--line);border-radius:22px;padding:4px;box-shadow:0 10px 30px rgba(0,0,0,.28);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.nav button{border:0;background:none;color:var(--hint);font-size:11px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:52px;justify-content:center;border-radius:16px}
+.nav button[aria-current=page]{color:var(--nav-on);font-weight:600;background:color-mix(in srgb,var(--nav-on) 10%,transparent)}
+/* settings: theme picker */
+.theme{display:flex;align-items:center;gap:12px;width:100%;min-height:64px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r);background:var(--card);color:var(--text);text-align:left}
+.theme[aria-pressed=true]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.theme .sw{width:52px;height:34px;border-radius:8px;flex:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.theme .ic{color:var(--accent)}
+.nav .ic{width:22px;height:22px}
+/* act and history */
+.select{width:100%;min-height:48px;border-radius:var(--r);border:1px solid var(--line);background:var(--card);color:var(--text);padding:0 12px;font-size:16px}
+.flabel{display:block;font-size:13px;color:var(--hint);font-weight:600;margin:12px 2px 6px}
+.hist{padding:12px 14px;border:1px solid var(--line);border-radius:var(--r);background:var(--card)}
+.hist .top2{display:flex;justify-content:space-between;gap:10px;font-weight:600;font-size:14.5px}
+.hist .top2 span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hist .top2 b{color:var(--ok);white-space:nowrap}.hist.cancel .top2 b{color:var(--hint);text-decoration:line-through}
+.hist .meta{white-space:normal}
+.search{position:sticky;top:0;z-index:5;padding:8px 0 10px;background:var(--bg)}
+.field{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:var(--r);padding:0 14px;min-height:48px;border:1.5px solid transparent;transition:border-color var(--fast)}
+.field:focus-within{border-color:var(--accent)}
+.field .ic{color:var(--hint)}
+.field input{flex:1;border:0;outline:0;background:transparent;min-height:46px;font-size:16px}
+.field input::placeholder{color:var(--hint)}
+.seg{display:flex;gap:4px;padding:4px;margin-top:10px;border-radius:14px;background:var(--soft)}
+.seg button{flex:1;min-height:44px;border:0;border-radius:10px;background:transparent;color:var(--hint);font-weight:600;font-size:14px;transition:background var(--fast),color var(--fast)}
+.seg button[aria-pressed=true]{background:var(--raised);color:var(--text)}
+.list{display:flex;flex-direction:column;gap:8px}
+.item{display:flex;align-items:center;gap:12px;width:100%;min-height:68px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r);background:var(--card);text-align:left;transition:transform var(--fast) var(--ease)}
+.item:active{transform:scale(.985)}
+.list>*{animation:in var(--mid) var(--ease) both}
+.av{width:42px;height:42px;border-radius:10px;display:grid;place-items:center;font-weight:600;font-size:14px;flex:none;background:var(--raised);color:var(--text)}
+.body{flex:1;min-width:0}
+.name{font-weight:600;font-size:15.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta{color:var(--hint);font-size:13px;margin-top:1px}
+.amt{text-align:right;flex:none}
+.amt b{display:block;font-size:15.5px;font-weight:700;color:var(--debt)}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:3px 8px;border-radius:999px}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}.pill.debt{background:var(--debt-soft);color:var(--debt)}
+.pill .ic{width:14px;height:14px;stroke-width:2.5}
+.chev{color:var(--hint)}
+.head{display:flex;align-items:center;gap:12px;margin:2px 2px 14px}
+.head .av{width:48px;height:48px;font-size:16px}
+.head h1{font-size:19px;margin:0;line-height:1.2;font-weight:700}
+.sectitle{font-size:13px;font-weight:600;color:var(--hint);text-transform:uppercase;letter-spacing:.04em;margin:18px 4px 8px}
+.lic{display:block;width:100%;padding:14px;border:1px solid var(--line);border-radius:var(--r);background:var(--card);text-align:left;transition:transform var(--fast) var(--ease)}
+.lic:active{transform:scale(.985)}
+.lic .row{display:flex;align-items:center;justify-content:space-between;gap:6px 10px;flex-wrap:wrap}
+.lic .row .body{min-width:min(100%,150px)}
+.meta,.pill{white-space:nowrap}
+.lic .name{white-space:normal}
+.months{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.mo{font-size:12.5px;padding:4px 9px;border-radius:8px;background:var(--debt-soft);color:var(--debt);font-weight:600}
+.mo.more{background:var(--soft);color:var(--hint)}
+.amountcard{background:var(--card);border-radius:var(--r-lg);padding:18px 16px}
+.amountcard label{display:block;color:var(--hint);font-size:13px;font-weight:600;text-align:center}
+.bigin{display:flex;align-items:baseline;justify-content:center;gap:6px;margin:6px 0 4px}
+.bigin input{width:2ch;min-width:2ch;max-width:100%;border:0;outline:0;background:transparent;text-align:center;font-size:38px;font-family:var(--num-font);font-weight:var(--num-weight);letter-spacing:-.01em;caret-color:var(--accent);padding:0}
+.bigin span{font-size:16px;color:var(--hint);font-weight:600}
+.hintline{text-align:center;color:var(--hint);font-size:13px}
+.chips{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:14px}
+.chip{min-height:44px;padding:0 14px;border:0;border-radius:12px;background:var(--accent-soft);color:var(--accent);font-weight:600;font-size:14px;transition:transform var(--fast) var(--ease),background var(--fast)}
+.chip:active{transform:scale(.95)}
+.chip[aria-pressed=true]{background:var(--accent);color:var(--on-accent)}
+.plan{background:var(--card);border-radius:var(--r-lg);padding:16px;margin-top:12px;animation:in var(--mid) var(--ease)}
+.plan h2{font-size:15px;margin:0 0 10px;display:flex;justify-content:space-between;font-weight:600}
+.step{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.step:first-of-type{border-top:0}
+.dot{width:28px;height:28px;border-radius:9px;background:var(--ok-soft);color:var(--ok);display:grid;place-items:center;flex:none}
+.dot .ic{width:16px;height:16px;stroke-width:2.6}
+.step .body small{color:var(--hint);font-size:12.5px}
+.step b{font-weight:600}
+.note{display:flex;gap:10px;align-items:flex-start;margin:12px 2px 0;font-size:13.5px;color:var(--hint)}
+.note.bad{color:var(--debt)}.note .ic{width:18px;height:18px;margin-top:1px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:50px;border:0;border-radius:var(--r);font-weight:600;margin-top:10px;transition:transform var(--fast) var(--ease),opacity var(--fast)}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--accent);color:var(--on-accent)}
+.btn.ghost{background:var(--card);color:var(--text)}
+.btn[disabled]{opacity:.5;pointer-events:none}
+.done{text-align:center;background:var(--card);border-radius:var(--r-lg);padding:28px 18px 22px}
+.check{width:76px;height:76px;margin:0 auto 12px;border-radius:50%;background:var(--ok-soft);display:grid;place-items:center;color:var(--ok)}
+.check svg{width:40px;height:40px;stroke-width:2.6}
+.check path{stroke-dasharray:30;stroke-dashoffset:30;animation:draw .5s .15s var(--ease) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.done .sum{font-size:32px;font-family:var(--num-font);font-weight:var(--num-weight);letter-spacing:-.01em}
+.done .who{margin-top:6px;font-weight:600}
+.done .months{justify-content:center}
+.done .mo{background:var(--ok-soft);color:var(--ok)}
+.skel{height:68px;border-radius:var(--r);background:linear-gradient(90deg,var(--card) 25%,color-mix(in srgb,var(--hint) 10%,var(--card)) 50%,var(--card) 75%);background-size:200% 100%;animation:sk 1.2s infinite}
+.skel.hero-s{height:150px;border-radius:var(--r-lg);margin-bottom:14px}
+@keyframes sk{to{background-position:-200% 0}}
+.empty{text-align:center;color:var(--hint);padding:40px 16px}
+.empty .ic{width:36px;height:36px;margin-bottom:8px}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.check path{stroke-dashoffset:0}}
+</style>
+</head>
+<body>
+<main id="app" aria-live="polite"></main>
+<script src="akt.js"></script>
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbztrlHtUAOOTjKiVOMHLMYYxwswEcies68fv75fHBgATEMr1u22e62ZJ6UV-tu6SIp4Yg/exec";
+const tg = window.Telegram && Telegram.WebApp;
+const inTelegram = !!(tg && tg.initData);
+const app = document.getElementById("app");
+const money = (v) => Math.round(+v || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+const short = (v) => (v >= 1e6 ? (v / 1e6).toFixed(1).replace(".", ",").replace(",0", "") + " mln" : money(v));
+const ICONS = {
+  search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  chev: '<path d="m9 18 6-6-6-6"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  refresh: '<path d="M21 12a9 9 0 1 1-2.6-6.4L21 8"/><path d="M21 3v5h-5"/>',
+  undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
+  alert: '<circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  inbox: '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5h13L22 12v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-6z"/>',
+  panel: '<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
+  users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',
+  pay: '<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',
+  file: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h8"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  send: '<path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+};
+const UZM = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentyabr", "Oktyabr", "Noyabr", "Dekabr"];
+const TABS = [["panel", "Panel", "panel"], ["clients", "Mijozlar", "users"], ["topay", "To'lov", "pay"], ["akt", "Akt", "file"], ["history", "Tarix", "clock"]];
+const icon = (n, cls) => { const s = document.createElementNS("http://www.w3.org/2000/svg", "svg"); s.setAttribute("viewBox", "0 0 24 24"); s.setAttribute("class", "ic" + (cls ? " " + cls : "")); s.setAttribute("aria-hidden", "true"); s.innerHTML = ICONS[n]; return s; };
+const h = (tag, attrs, ...kids) => {
+  const e = document.createElement(tag);
+  Object.entries(attrs || {}).forEach(([k, v]) => (k.startsWith("on") ? e.addEventListener(k.slice(2), v) : v != null && e.setAttribute(k, v)));
+  kids.flat().forEach((k) => k != null && k !== false && e.append(k));
+  return e;
+};
+function avatar(name) {
+  const clean = name.replace(/["'«»()]/g, " ").replace(/\b(OOO|MCHJ|ИП|OK)\b/gi, " ").trim().split(/\s+/).filter(Boolean);
+  const ini = ((clean[0] || "?")[0] + ((clean[1] || "")[0] || "")).toUpperCase();
+  return h("div", { class: "av", "aria-hidden": "true" }, ini);
+}
+// dashData: {totals, lines, history} from the "dash" action; null until loaded or when the API is older
+let clients = [], dashData = null, dashErr = "", view = { name: "panel", filter: "debt" }, busy = false;
+
+async function api(action, body) {
+  const r = await fetch(API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(Object.assign({ action, initData: tg ? tg.initData : "" }, body || {})) });
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error || "Server xatosi");
+  return j;
+}
+const haptic = (t) => { try { t === "tap" ? tg.HapticFeedback.selectionChanged() : tg.HapticFeedback.notificationOccurred(t); } catch (e) {} };
+function mainButton(text, fn) {
+  if (!tg) return;
+  if (mainButton._fn) tg.MainButton.offClick(mainButton._fn);
+  mainButton._fn = null;
+  if (!text) return tg.MainButton.hide();
+  mainButton._fn = fn; tg.MainButton.setText(text); tg.MainButton.onClick(fn); tg.MainButton.enable(); tg.MainButton.show();
+}
+function backButton(fn) {
+  if (!tg) return;
+  if (backButton._fn) tg.BackButton.offClick(backButton._fn);
+  backButton._fn = fn || null;
+  if (!fn) return tg.BackButton.hide();
+  tg.BackButton.onClick(fn); tg.BackButton.show();
+}
+const go = (v) => { view = Object.assign({ filter: view.filter, q: view.q, from: view.from }, v); render(); window.scrollTo(0, 0); };
+const isTab = (name) => TABS.some((t) => t[0] === name);
+
+function companies() {
+  const m = new Map();
+  clients.filter((c) => !c.stopped).forEach((c) => {
+    const x = m.get(c.company) || { company: c.company, owed: 0, rows: [] };
+    x.owed += c.owed; x.rows.push(c); m.set(c.company, x);
+  });
+  return [...m.values()].sort((a, b) => b.owed - a.owed || a.company.localeCompare(b.company));
+}
+
+function render() {
+  mainButton(null); backButton(null);
+  const s = h("div", { class: "screen" });
+  ({ panel: renderPanel, clients: renderList, topay: renderList, akt: renderAkt, history: renderHistory,
+     client: renderClient, pay: renderPay, done: renderDone, settings: renderSettings })[view.name](s);
+  app.replaceChildren(s);
+  if (isTab(view.name)) app.append(navBar());
+}
+
+function navBar() {
+  return h("nav", { class: "nav", "aria-label": "Bo'limlar" }, TABS.map(([key, label, ic]) =>
+    h("button", { type: "button", "aria-current": view.name === key ? "page" : null,
+      onclick: () => { if (view.name !== key) { haptic("tap"); go({ name: key, q: "" }); } } }, icon(ic), label)));
+}
+
+function topBar(s, title, sub) {
+  const refresh = h("button", { class: "iconbtn", "aria-label": "Yangilash", onclick: async () => { refresh.classList.add("spin"); await load(true); refresh.classList.remove("spin"); if (isTab(view.name)) render(); } }, icon("refresh"));
+  const gear = h("button", { class: "iconbtn", "aria-label": "Sozlamalar", onclick: () => { haptic("tap"); go({ name: "settings", from: isTab(view.name) ? view.name : "panel" }); } }, icon("gear"));
+  s.append(h("div", { class: "top" }, h("div", { class: "brand" }, h("div", { class: "logo", "aria-hidden": "true" }, "BIS"),
+    h("div", {}, h("b", {}, title || "To'lovlar"), h("small", {}, sub || "Google Sheets bilan bog'langan"))),
+    h("div", { style: "display:flex;gap:8px" }, gear, refresh)));
+}
+
+// ---------- themes ----------
+const THEMES = [
+  ["platinum", "Midnight Platinum", "tungi ko'k · platina", "linear-gradient(125deg,#F4F6FA,#AEB6C4 50%,#1B2944)"],
+  ["noir", "Noir Centurion", "qora · shampan oltin", "linear-gradient(125deg,#2A2A2C,#0E0E0F 60%,#C2A26A)"],
+  ["ivory", "Ivory Executive", "fil suyagi · to'q ko'k", "linear-gradient(125deg,#F6F2EA 45%,#0F1B33 46%)"],
+  ["emerald", "Emerald Private", "zumrad · jez", "linear-gradient(125deg,#1F5A47,#0C1F19 60%,#D2B57A)"],
+  ["bordo", "Bordo Royal", "bordo · oltin", "linear-gradient(125deg,#6E1E30,#250A11 60%,#D6B67A)"],
+];
+const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+function applyTheme(key) {
+  if (!THEMES.some((t) => t[0] === key)) key = THEMES[0][0];
+  document.documentElement.setAttribute("data-theme", key);
+  if (tg) {
+    const head = cssVar("--header");
+    try { tg.setHeaderColor(head); tg.setBackgroundColor(head); tg.setBottomBarColor && tg.setBottomBarColor(head); } catch (e) {}
+    try { tg.MainButton.setParams({ color: cssVar("--accent"), text_color: cssVar("--on-accent") }); } catch (e) {}
+  }
+  return key;
+}
+// the choice is kept on this phone (localStorage) and in the user's Telegram cloud, so it follows them
+function saveTheme(key) {
+  try { localStorage.setItem("bis-theme", key); } catch (e) {}
+  try { tg && tg.CloudStorage && tg.CloudStorage.setItem("theme", key); } catch (e) {}
+}
+function loadTheme() {
+  let key = null;
+  try { key = localStorage.getItem("bis-theme"); } catch (e) {}
+  applyTheme(key);
+  try {
+    if (tg && tg.CloudStorage) tg.CloudStorage.getItem("theme", (err, v) => {
+      if (!err && v && v !== document.documentElement.getAttribute("data-theme")) { applyTheme(v); try { localStorage.setItem("bis-theme", v); } catch (e) {} if (isTab(view.name)) render(); }
+    });
+  } catch (e) {}
+}
+
+function renderSettings(s) {
+  backButton(() => go({ name: view.from || "panel" }));
+  s.append(h("div", { class: "head" }, h("div", { class: "body" }, h("h1", {}, "Ko'rinish"), h("div", { class: "meta" }, "Mavzu faqat sizning telefoningizda o'zgaradi"))));
+  const cur = document.documentElement.getAttribute("data-theme");
+  s.append(heroCard(panelStats()));
+  s.append(h("div", { class: "list", role: "group", "aria-label": "Mavzular" }, THEMES.map(([key, name, sub, sw]) =>
+    h("button", { class: "theme", type: "button", "aria-pressed": String(cur === key),
+      onclick: () => { haptic("tap"); saveTheme(applyTheme(key)); render(); } },
+      h("span", { class: "sw", style: "background:" + sw, "aria-hidden": "true" }),
+      h("div", { class: "body" }, h("div", { class: "name" }, name), h("div", { class: "meta" }, sub)),
+      cur === key ? icon("check") : null))));
+  if (!tg) s.append(h("button", { class: "btn ghost", onclick: () => go({ name: view.from || "panel" }) }, "Orqaga"));
+}
+
+function heroCard(st) {
+  const theme = THEMES.find((t) => t[0] === document.documentElement.getAttribute("data-theme")) || THEMES[0];
+  return h("section", { class: "hero", "aria-label": "Umumiy qarz" },
+    h("div", { class: "top3" }, h("span", { class: "brandmark" }, "B I S"), h("span", { class: "cap" }, theme[1].split(" ")[1])),
+    h("div", { class: "cap", style: "margin-top:16px" }, "Yana to'lanishi kerak"),
+    h("div", { class: "sum num" }, money(st.owed)),
+    h("div", { class: "unit" }, "so'm · " + st.debtors.length + " / " + st.clients + " mijoz"),
+    h("div", { class: "track", role: "img", "aria-label": "Yig'ilgan ulush" }, h("i", { style: `width:${st.rate != null ? Math.round(st.rate * 100) : 0}%` })),
+    h("div", { class: "foot" }, h("span", {}, st.rate != null ? (st.rate * 100).toFixed(1).replace(".", ",") + "% yig'ildi" : ""), h("span", {}, String(new Date().getFullYear()))));
+}
+
+const today = () => { const t = new Date(); return String(t.getDate()).padStart(2, "0") + "." + String(t.getMonth() + 1).padStart(2, "0") + "." + t.getFullYear(); };
+const mln = (v) => (v / 1e6).toLocaleString("ru-RU", { maximumFractionDigits: v >= 1e9 ? 0 : 1 }).replace(/\s/g, " ") + " mln";
+const kind = (type) => { const t = String(type).toLowerCase(); return t === "prof" ? "Prof" : t.indexOf("limit") === 0 ? "Limited" : "Web/App"; };
+
+/** Everything the panel shows, from the sheet's totals and month cells. */
+function panelStats() {
+  const now = new Date(), y = now.getFullYear(), cm = now.getMonth() + 1;
+  const all = companies(), debtors = all.filter((c) => c.owed > 0);
+  const st = { debtors, owed: debtors.reduce((t, c) => t + c.owed, 0), clients: all.length };
+  if (!dashData) return st;
+  const L = dashData.lines, T = dashData.totals;
+  st.owed = T.owed || st.owed; st.paid = T.paid; st.accrued = T.accrued; st.rate = T.accrued ? T.paid / T.accrued : 0;
+  st.monthly = L.filter((r) => !r.stopped).reduce((t, r) => t + r.monthly, 0);
+  st.months = [];
+  for (let m = 1; m <= cm; m++) {
+    const k = "m" + y + "_" + String(m).padStart(2, "0");
+    st.months.push({ m, v: L.reduce((t, r) => t + (Number(r[k]) || 0), 0) });
+  }
+  const share = { Prof: 0, "Web/App": 0, Limited: 0 };
+  L.filter((r) => !r.stopped).forEach((r) => (share[kind(r.type)] += r.monthly));
+  st.share = share;
+  const due = y + "-" + String(cm).padStart(2, "0"), age = { 1: 0, 2: 0, 3: 0 };
+  debtors.forEach((c) => {
+    const ms = new Set();
+    L.filter((r) => r.company === c.company).forEach((r) => String(r.qarz_oylar || "").split(";").filter((k) => k && k <= due).forEach((k) => ms.add(k)));
+    age[Math.min(3, Math.max(1, ms.size))] += 1;
+  });
+  st.age = age;
+  return st;
+}
+
+function areaChart(months) {
+  const W = 300, H = 90, max = Math.max(1, ...months.map((x) => x.v)), n = months.length;
+  const px = (i) => (n === 1 ? W / 2 : (i / (n - 1)) * W), py = (v) => H - 8 - (v / max) * (H - 22);
+  const pts = months.map((x, i) => [px(i), py(x.v)]);
+  const line = pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
+  const top = months.reduce((b, x, i) => (x.v > months[b].v ? i : b), 0);
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.setAttribute("role", "img");
+  svg.setAttribute("aria-label", "Oylar bo'yicha tushum: " + months.map((x) => UZM[x.m - 1] + " " + mln(x.v)).join(", "));
+  const c = cssVar("--chart"), tx = cssVar("--text"), bg = cssVar("--card");
+  svg.innerHTML = `<defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c}" stop-opacity=".35"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></linearGradient></defs>
+    <path d="${line} L${W} ${H} L0 ${H}Z" fill="url(#ag)"/><path d="${line}" fill="none" stroke="${c}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${pts[top][0]}" cy="${pts[top][1]}" r="4" fill="${bg}" stroke="${c}" stroke-width="1.8"/>
+    <text x="${Math.min(W - 4, Math.max(4, pts[top][0]))}" y="${Math.max(10, pts[top][1] - 8)}" fill="${tx}" font-size="11" font-weight="600" text-anchor="${pts[top][0] > W - 40 ? "end" : pts[top][0] < 40 ? "start" : "middle"}">${mln(months[top].v)}</text>`;
+  return h("div", { class: "chart" }, svg, h("div", { class: "ax", "aria-hidden": "true" }, months.map((x) => h("span", {}, UZM[x.m - 1].slice(0, 3)))));
+}
+
+function renderPanel(s) {
+  topBar(s, "Dashboard", today() + " holatiga");
+  const st = panelStats();
+  s.append(heroCard(st), h("div", { class: "kpis" },
+    h("div", { class: "kpi" }, h("div", { class: "l" }, "Oylik tushum"), h("div", { class: "v" }, st.monthly != null ? mln(st.monthly) : "—"), h("div", { class: "d" }, "faol xizmatlar")),
+    h("div", { class: "kpi" }, h("div", { class: "l" }, "To'langan"), h("div", { class: "v" }, st.paid != null ? mln(st.paid) : "—"),
+      h("div", { class: "d" }, st.accrued != null ? "hisoblangan " + mln(st.accrued) : ""))));
+  if (!dashData) {
+    s.append(h("div", { class: "note" + (dashErr ? " bad" : "") }, icon("info"),
+      dashErr ? "Grafiklar uchun serverdagi Apps Script yangilanishi kerak (" + dashErr + ")." : "Grafiklar yuklanmoqda…"));
+  } else {
+    if (st.months.length) s.append(h("section", { class: "card" }, h("div", { class: "ct" }, h("span", {}, "Oylar bo'yicha tushum"), h("small", {}, new Date().getFullYear() + ", so'm")), areaChart(st.months)));
+    const tot = Object.values(st.share).reduce((a, b) => a + b, 0) || 1, COLORS = { Prof: cssVar("--s1"), "Web/App": cssVar("--s2"), Limited: cssVar("--s3") };
+    s.append(h("section", { class: "card" }, h("div", { class: "ct" }, h("span", {}, "Xizmatlar ulushi"), h("small", {}, "oylik summa")),
+      h("div", { class: "share", role: "img", "aria-label": Object.entries(st.share).map(([k, v]) => k + " " + Math.round(v / tot * 100) + "%").join(", ") },
+        Object.entries(st.share).map(([k, v]) => h("span", { style: `width:${v / tot * 100}%;background:${COLORS[k]}` }))),
+      h("div", { class: "legend" }, Object.entries(st.share).map(([k, v]) => h("span", {}, h("i", { style: "background:" + COLORS[k] }), k + " " + Math.round(v / tot * 100) + "%")))));
+    const n = st.debtors.length || 1, AGE = [[1, "1 oy", cssVar("--a1")], [2, "2 oy", cssVar("--a2")], [3, "3+ oy", cssVar("--a3")]];
+    s.append(h("section", { class: "card" }, h("div", { class: "ct" }, h("span", {}, "Qarz muddati"), h("small", {}, "mijozlar soni")),
+      AGE.map(([k, label, col]) => h("div", { class: "age" }, h("span", {}, label), h("div", { class: "tr" }, h("i", { style: `width:${st.age[k] / n * 100}%;background:${col}` })), h("b", {}, String(st.age[k]))))));
+  }
+  s.append(h("section", { class: "card" }, h("div", { class: "ct" }, h("span", {}, "Eng katta qarzdorlar"),
+    h("button", { class: "link", type: "button", onclick: () => go({ name: "clients", filter: "debt", q: "" }) }, "Hammasi ›")),
+    st.debtors.slice(0, 5).map((c) => h("button", { class: "toprow", type: "button", onclick: () => { haptic("tap"); go({ name: "client", company: c.company, from: "panel" }); } },
+      h("span", { class: "n" }, c.company), h("b", {}, short(c.owed)))),
+    st.debtors.length ? null : h("div", { class: "meta" }, "Qarzdor yo'q")));
+}
+
+function renderList(s) {
+  const paying = view.name === "topay";
+  topBar(s, paying ? "To'lov kiritish" : "Mijozlar", paying ? "Kimdan to'lov keldi?" : "Google Sheets bilan bog'langan");
+  const filter = paying ? "debt" : view.filter;
+  const all = companies(), debtors = all.filter((c) => c.owed > 0);
+  const q = h("input", { type: "search", placeholder: "Mijoz nomi yoki kodi (AE04)", value: view.q || "", "aria-label": "Mijoz qidirish", enterkeyhint: "search" });
+  const segBtn = (key, label) => h("button", { type: "button", "aria-pressed": String(view.filter === key), onclick: () => { haptic("tap"); view.filter = key; render(); } }, label);
+  s.append(h("div", { class: "search" }, h("label", { class: "field" }, icon("search"), q),
+    paying ? null : h("div", { class: "seg", role: "group", "aria-label": "Saralash" }, segBtn("debt", "Qarzdorlar · " + debtors.length), segBtn("all", "Hammasi · " + all.length))));
+  const list = h("div", { class: "list" });
+  const fill = () => {
+    const needle = q.value.toLowerCase().replace(/[^0-9a-zа-яё]/gi, "");
+    view.q = q.value;
+    const cs = (filter === "debt" && !needle ? debtors : all).filter((c) => !needle || c.company.toLowerCase().replace(/[^0-9a-zа-яё]/gi, "").includes(needle));
+    list.replaceChildren(...(cs.length ? cs.map((c, i) => h("button", { class: "item", style: `animation-delay:${Math.min(i, 10) * 25}ms`, onclick: () => { haptic("tap"); go({ name: "client", company: c.company, from: view.name }); } },
+      avatar(c.company), h("div", { class: "body" }, h("div", { class: "name" }, c.company), h("div", { class: "meta" }, c.rows.length + " ta litsenziya")),
+      h("div", { class: "amt" }, c.owed > 0 ? [h("b", {}, short(c.owed)), h("span", { class: "pill debt" }, "qarz")] : h("span", { class: "pill ok" }, icon("check"), "to'langan")),
+      icon("chev", "chev")))
+      : [h("div", { class: "empty" }, icon("inbox"), h("div", {}, "Hech narsa topilmadi"))]));
+  };
+  q.addEventListener("input", fill);
+  s.append(list);
+  fill();
+}
+
+function renderClient(s) {
+  const c = companies().find((x) => x.company === view.company);
+  const back = view.from || "clients";
+  backButton(() => go({ name: back }));
+  if (!c) return go({ name: back });
+  s.append(h("div", { class: "head" }, avatar(c.company), h("div", { class: "body" }, h("h1", {}, c.company),
+    h("div", { class: "meta" }, c.owed > 0 ? "Jami qarz: " + money(c.owed) + " so'm" : "Qarzi yo'q"))));
+  s.append(h("div", { class: "sectitle" }, "Litsenziyani tanlang"));
+  const list = h("div", { class: "list" });
+  c.rows.forEach((r, i) => list.append(h("button", { class: "lic", style: `animation-delay:${i * 30}ms`, onclick: () => { haptic("tap"); go({ name: "pay", row: r.row, company: c.company }); } },
+    h("div", { class: "row" }, h("div", { class: "body" }, h("div", { class: "name" }, r.type + " ×" + r.qty), h("div", { class: "meta" }, money(r.monthly) + " so'm / oy")),
+      r.owed > 0 ? h("span", { class: "pill debt" }, money(r.owed)) : h("span", { class: "pill ok" }, icon("check"), "to'langan"), icon("chev", "chev")),
+    r.partial ? h("div", { class: "note" }, icon("info"), r.partial.label + " qisman to'langan: " + money(r.partial.value) + " / " + money(r.monthly)) : null,
+    r.unpaid.length ? h("div", { class: "months", "aria-label": "To'lanmagan oylar" }, r.unpaid.slice(0, 3).map((m) => h("span", { class: "mo" }, m)),
+      r.unpaid.length > 3 ? h("span", { class: "mo more" }, "+" + (r.unpaid.length - 3) + " oy") : null) : null)));
+  s.append(list);
+}
+
+function renderPay(s) {
+  const r = clients.find((x) => x.row === view.row);
+  backButton(() => go({ name: "client", company: view.company }));
+  if (!r) return go({ name: "list" });
+  s.append(h("div", { class: "head" }, avatar(r.company), h("div", { class: "body" }, h("h1", {}, r.type + " ×" + r.qty),
+    h("div", { class: "meta" }, r.company))));
+  const input = h("input", { id: "amt", inputmode: "numeric", autocomplete: "off", placeholder: "0", value: view.amount ? money(view.amount) : "", "aria-describedby": "amt-hint" });
+  const planBox = h("div"), msg = h("div", { role: "status" });
+  const amount = () => Number(String(input.value).replace(/\D/g, ""));
+  // the field grows with the number, so "so'm" stays right next to it
+  const fit = () => { input.style.width = Math.max(2, input.value.length + 0.6) + "ch"; };
+  const quick = [];
+  if (r.partial) quick.push(["Qoldiq", r.monthly - r.partial.value]);
+  [1, 2, 3].filter((k) => k <= r.unpaid.length).forEach((k) => quick.push([k + " oy", k * r.monthly]));
+  if (r.owed > 0 && !quick.some((x) => x[1] === r.owed)) quick.push(["Qarzni yopish", r.owed]);
+  const chips = h("div", { class: "chips" });
+  const drawChips = () => chips.replaceChildren(...quick.map(([label, v]) => h("button", { class: "chip", type: "button", "aria-pressed": String(amount() === v),
+    onclick: () => { haptic("tap"); input.value = money(v); view.amount = v; fit(); drawChips(); reset(); calc(); } }, label)));
+  const say = (text, bad) => msg.replaceChildren(text ? h("div", { class: "note" + (bad ? " bad" : "") }, icon(bad ? "alert" : "info"), text) : "");
+  const reset = () => { view.plan = null; planBox.replaceChildren(); say(""); mainButton(amount() ? "Hisoblash" : null, calc); };
+  input.addEventListener("input", () => { const v = amount(); input.value = v ? money(v) : ""; view.amount = v; fit(); drawChips(); reset(); });
+  input.addEventListener("keydown", (e) => { if (e.key === "Enter") { input.blur(); calc(); } });
+  s.append(h("section", { class: "amountcard" }, h("label", { for: "amt" }, "To'langan summa"),
+    h("div", { class: "bigin" }, input, h("span", {}, "so'm")),
+    h("div", { class: "hintline", id: "amt-hint" }, "Oylik to'lov: " + money(r.monthly) + " so'm"), chips), planBox, msg);
+  if (!tg) s.append(h("button", { class: "btn primary", onclick: () => (view.plan ? confirm() : calc()) }, "Hisoblash / Tasdiqlash"));
+  fit(); drawChips(); reset();
+  setTimeout(() => input.focus(), 300);
+
+  async function calc() {
+    if (busy) return;
+    const v = amount();
+    if (!v) return say("Summani kiriting yoki tez tugmalardan birini tanlang", true);
+    busy = true; tg && tg.MainButton.showProgress(); say("Hisoblanmoqda…");
+    try {
+      const { plan } = await api("plan", { row: r.row, amount: v });
+      view.plan = plan;
+      planBox.replaceChildren(h("section", { class: "plan", "aria-label": "Belgilanadigan oylar" },
+        h("h2", {}, h("span", {}, "Belgilanadi"), h("span", { style: "color:var(--ok)" }, money(v) + " so'm")),
+        plan.writes.map((w) => h("div", { class: "step" }, h("div", { class: "dot" }, icon("check")),
+          h("div", { class: "body" }, h("b", {}, w.label), w.prev ? h("small", {}, " · qoldiq yopiladi: " + money(w.prev) + " → " + money(w.neu)) : null),
+          h("b", {}, "+" + money(w.paid))))));
+      say("Tasdiqlamaguningizcha jadvalga hech narsa yozilmaydi");
+      mainButton("Tasdiqlash · " + money(v) + " so'm", confirm);
+      haptic("tap");
+    } catch (e) { say(e.message, true); haptic("error"); mainButton("Hisoblash", calc); }
+    busy = false; tg && tg.MainButton.hideProgress();
+  }
+  async function confirm() {
+    if (busy || !view.plan) return;
+    busy = true; tg && tg.MainButton.showProgress(); say("Yozilmoqda…");
+    try {
+      const res = await api("pay", { row: r.row, amount: view.plan.amount, expect: view.plan.writes.map((w) => ({ col: w.col, old: w.old })) });
+      haptic("success");
+      busy = false; tg && tg.MainButton.hideProgress();
+      load(true);
+      return go({ name: "done", res, company: view.company });
+    } catch (e) { say(e.message, true); haptic("error"); }
+    busy = false; tg && tg.MainButton.hideProgress();
+  }
+}
+
+function renderDone(s) {
+  const { res } = view;
+  const msg = h("div", { role: "status" });
+  const undo = h("button", { class: "btn ghost", onclick: async () => {
+    if (busy) return; busy = true; undo.setAttribute("disabled", "");
+    try { await api("undo", { op: res.op }); haptic("warning"); msg.replaceChildren(h("div", { class: "note" }, icon("undo"), "Bekor qilindi: kataklar oldingi holatiga qaytdi")); undo.remove(); load(true); }
+    catch (e) { msg.replaceChildren(h("div", { class: "note bad" }, icon("alert"), e.message)); undo.removeAttribute("disabled"); }
+    busy = false;
+  } }, icon("undo"), "Bekor qilish");
+  const check = h("div", { class: "check", "aria-hidden": "true" });
+  check.innerHTML = '<svg viewBox="0 0 24 24" class="ic"><path d="M20 6 9 17l-5-5"/></svg>';
+  s.append(h("section", { class: "done", "aria-label": "To'lov yozildi" }, check, h("div", { class: "meta" }, "To'lov yozildi"),
+    h("div", { class: "sum" }, money(res.amount) + " so'm"), h("div", { class: "who" }, res.company + " — " + res.type),
+    h("div", { class: "months" }, res.months.map((m) => h("span", { class: "mo" }, m))),
+    h("div", { class: "note", style: "justify-content:center" }, icon("check"), "Google Sheets'ga yozildi, xodimlarga xabar ketdi")), msg, undo);
+  mainButton("Yangi to'lov", () => go({ name: "topay", q: "" }));
+  if (!tg) s.append(h("button", { class: "btn primary", onclick: () => go({ name: "topay", q: "" }) }, icon("plus"), "Yangi to'lov"));
+}
+
+let excelP = null;
+const excel = () => (excelP = excelP || new Promise((ok, bad) => {
+  if (window.ExcelJS) return ok(window.ExcelJS);
+  const sc = document.createElement("script");
+  sc.src = "https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js";
+  sc.onload = () => (window.ExcelJS ? ok(window.ExcelJS) : bad(new Error("Excel kutubxonasi yuklanmadi")));
+  sc.onerror = () => { sc.remove(); bad(new Error("Excel kutubxonasi yuklanmadi — internetni tekshiring")); };
+  document.head.appendChild(sc);
+}).catch((e) => { excelP = null; throw e; }));
+const toB64 = (buf) => { const b = new Uint8Array(buf); let s = ""; for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s); };
+
+function renderAkt(s) {
+  topBar(s, "Akt sverka", "Excel fayl bot chatiga keladi");
+  if (!dashData) return s.append(h("div", { class: "note" + (dashErr ? " bad" : "") }, icon("info"),
+    dashErr ? "Akt uchun serverdagi Apps Script yangilanishi kerak (" + dashErr + ")." : "Ma'lumot yuklanmoqda…"));
+  const cos = [...new Set(dashData.lines.map((r) => r.company))].sort((a, b) => a.localeCompare(b));
+  const top = companies().find((c) => c.owed > 0);
+  view.aktCo = view.aktCo || (top ? top.company : cos[0]);
+  const coSel = h("select", { class: "select", id: "akt-co", onchange: () => (view.aktCo = coSel.value) }, cos.map((c) => h("option", { value: c }, c)));
+  coSel.value = view.aktCo;
+  const years = [...new Set(dashData.lines.flatMap((r) => Object.keys(r).filter((k) => /^m\d{4}_\d{2}$/.test(k) && r[k] > 0).map((k) => Number(k.slice(1, 5)))))];
+  const now = new Date().getFullYear();
+  if (years.indexOf(now) < 0) years.push(now);
+  const ySel = h("select", { class: "select", id: "akt-y" }, years.sort().map((y) => h("option", { value: String(y) }, y + "-yil")));
+  ySel.value = String(now);
+  const msg = h("div", { role: "status" });
+  const say = (t, bad) => msg.replaceChildren(t ? h("div", { class: "note" + (bad ? " bad" : "") }, icon(bad ? "alert" : "info"), t) : "");
+  async function send(list, label) {
+    if (busy) return;
+    busy = true; one.setAttribute("disabled", ""); every.setAttribute("disabled", "");
+    try {
+      say("Tayyorlanmoqda…");
+      const year = Number(ySel.value), ExcelJS = await excel();
+      const acts = list.map((co) => window.bkAkt.buildAct(dashData.lines, [], co, year)).filter((a) => list.length === 1 || a.docs.length || Math.round(a.opening));
+      const buf = await window.bkAkt.workbook(ExcelJS, acts);
+      say("Telegram'ga yuborilmoqda…");
+      await api("sendAkt", { filename: "Akt sverka - " + window.bkAkt.safeFile(label) + " - " + year + ".xlsx", b64: toB64(buf) });
+      haptic("success");
+      say("Fayl bot chatiga yuborildi. Mini App'ni yopib, chatdan oching.");
+    } catch (e) { haptic("error"); say(e.message, true); }
+    busy = false; one.removeAttribute("disabled"); every.removeAttribute("disabled");
+  }
+  const one = h("button", { class: "btn primary", type: "button", onclick: () => send([coSel.value], coSel.value) }, icon("send"), "Mijoz aktini yuborish");
+  const every = h("button", { class: "btn ghost", type: "button", onclick: () => send(cos, "barcha mijozlar") }, icon("file"), "Barcha mijozlar (bitta fayl)");
+  s.append(h("section", { class: "card" },
+    h("label", { class: "flabel", for: "akt-co", style: "margin-top:0" }, "Mijoz"), coSel,
+    h("label", { class: "flabel", for: "akt-y" }, "Yil"), ySel, one, every), msg,
+    h("div", { class: "note" }, icon("info"), "Akt Google Sheets'dagi oylar bo'yicha tuziladi: har oy schyot-faktura, to'langan oylar «Оплата». Yakuniy qoldiq jadvaldagi «Yana to'lash kerak» bilan bir xil."));
+}
+
+function renderHistory(s) {
+  topBar(s, "Tarix", "So'nggi kiritilgan to'lovlar");
+  if (!dashData) return s.append(h("div", { class: "note" + (dashErr ? " bad" : "") }, icon("info"),
+    dashErr ? "Tarix uchun serverdagi Apps Script yangilanishi kerak (" + dashErr + ")." : "Ma'lumot yuklanmoqda…"));
+  const groups = [];
+  dashData.history.forEach((r) => {
+    const key = [r.company, r.type, r.at, r.who, r.note].join("|"), m = /^(\d{4})-(\d{2})$/.exec(String(r.month));
+    const label = m ? UZM[Number(m[2]) - 1] + " " + m[1] : String(r.month), g = groups[groups.length - 1];
+    if (g && g.key === key) { g.months.unshift(label); g.amount += r.amount; return; }
+    groups.push({ key, company: r.company, type: r.type, at: r.at, who: String(r.who).replace(/\s*\(mini app\)$/, ""), note: String(r.note || "").toLowerCase(), months: [label], amount: r.amount });
+  });
+  const src = (note) => (note.indexOf("mini app") === 0 ? "Mini App" : note.indexOf("sayt") === 0 ? "sayt" : "bot");
+  s.append(h("div", { class: "list" }, groups.length ? groups.map((g, i) => h("div", { class: "hist" + (g.note.indexOf("bekor") >= 0 ? " cancel" : ""), style: `animation-delay:${Math.min(i, 10) * 25}ms` },
+    h("div", { class: "top2" }, h("span", {}, g.company), h("b", {}, (g.amount < 0 ? "−" : "+") + money(Math.abs(g.amount)))),
+    h("div", { class: "meta" }, g.type + " · " + g.months.join(", ") + (g.note.indexOf("bekor") >= 0 ? " · bekor qilingan" : "")),
+    h("div", { class: "meta" }, g.at + " · " + g.who + " · " + src(g.note))))
+    : [h("div", { class: "empty" }, icon("inbox"), h("div", {}, "Hali to'lov kiritilmagan"))]));
+}
+
+async function load(quiet) {
+  if (!quiet) { const s = h("div", { class: "screen" }); topBar(s, "Dashboard", "Yuklanmoqda…"); s.append(h("div", { class: "skel hero-s" }), h("div", { class: "list" }, [1, 2, 3, 4].map(() => h("div", { class: "skel" })))); app.replaceChildren(s); }
+  try {
+    const [c, d] = await Promise.all([api("clients"), api("dash").catch((e) => { dashErr = e.message; return null; })]);
+    clients = c.clients;
+    if (d) { dashData = { totals: d.totals, lines: d.lines, history: d.history }; dashErr = ""; }
+    if (!quiet) render();
+  } catch (e) {
+    if (quiet) return;
+    const s = h("div", { class: "screen" }); topBar(s);
+    s.append(h("div", { class: "empty" }, icon("alert"), h("div", {}, e.message)), h("button", { class: "btn primary", onclick: () => load() }, icon("refresh"), "Qayta urinish"));
+    app.replaceChildren(s);
+  }
+}
+
+if (tg) { tg.ready(); tg.expand(); }
+loadTheme();
+if (!inTelegram) {
+  const s = h("div", { class: "screen" }); topBar(s);
+  s.append(h("div", { class: "empty" }, icon("info"), h("div", {}, "Bu sahifa faqat Telegram ichida ishlaydi: @bis_tolov_bot → «To'lov kiritish»")));
+  app.replaceChildren(s);
+} else load();
+</script>
+</body>
+</html>
