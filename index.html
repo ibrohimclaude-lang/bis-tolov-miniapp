@@ -132,6 +132,8 @@ main{max-width:640px;margin:0 auto;padding:max(12px,env(safe-area-inset-top)) 16
 .toprow:first-of-type{border-top:0}
 .toprow .n{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .toprow b{color:var(--debt)}
+.toprow .when{color:var(--hint);font-size:12.5px;white-space:nowrap}
+.remind{display:block;width:100%;min-height:230px;border:0;background:transparent;color:var(--text);font:inherit;font-size:14.5px;line-height:1.5;resize:vertical;outline:none}
 .link{border:0;background:none;color:var(--accent);font-weight:600;font-size:13px;padding:6px 0;min-height:32px}
 /* bottom navigation */
 .nav{position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:20;max-width:616px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);background:var(--nav-bg);border:1px solid var(--line);border-radius:22px;padding:4px;box-shadow:0 10px 30px rgba(0,0,0,.28);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
@@ -255,6 +257,8 @@ const ICONS = {
   file: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h8"/>',
   clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   send: '<path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/>',
+  copy: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
+  bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>',
   gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
 };
 const UZM = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentyabr", "Oktyabr", "Noyabr", "Dekabr"];
@@ -318,7 +322,7 @@ function render() {
   mainButton(null); backButton(null);
   const s = h("div", { class: "screen" });
   ({ panel: renderPanel, clients: renderList, topay: renderList, akt: renderAkt, history: renderHistory,
-     client: renderClient, pay: renderPay, done: renderDone, settings: renderSettings })[view.name](s);
+     client: renderClient, pay: renderPay, done: renderDone, settings: renderSettings, remind: renderRemind })[view.name](s);
   app.replaceChildren(s);
   if (isTab(view.name)) app.append(navBar());
 }
@@ -453,6 +457,13 @@ function renderPanel(s) {
     h("div", { class: "kpi" }, h("div", { class: "l" }, "Oylik tushum"), h("div", { class: "v" }, st.monthly != null ? mln(st.monthly) : "—"), h("div", { class: "d" }, "faol xizmatlar")),
     h("div", { class: "kpi" }, h("div", { class: "l" }, "To'langan"), h("div", { class: "v" }, st.paid != null ? mln(st.paid) : "—"),
       h("div", { class: "d" }, st.accrued != null ? "hisoblangan " + mln(st.accrued) : ""))));
+  if (dashData && dashData.week) {
+    const w = dashData.week, diff = w.cur - w.prev;
+    s.append(h("div", { class: "kpis" },
+      h("div", { class: "kpi" }, h("div", { class: "l" }, "Shu hafta"), h("div", { class: "v" }, mln(w.cur)),
+        h("div", { class: "d" + (diff > 0 ? " good" : "") }, (diff >= 0 ? "+" : "−") + mln(Math.abs(diff)) + " o'tgan haftaga")),
+      h("div", { class: "kpi" }, h("div", { class: "l" }, "O'tgan hafta"), h("div", { class: "v" }, mln(w.prev)), h("div", { class: "d" }, "dushanba–yakshanba"))));
+  }
   if (!dashData) {
     s.append(h("div", { class: "note" + (dashErr ? " bad" : "") }, icon("info"),
       dashErr ? "Grafiklar uchun serverdagi Apps Script yangilanishi kerak (" + dashErr + ")." : "Grafiklar yuklanmoqda…"));
@@ -472,6 +483,11 @@ function renderPanel(s) {
     st.debtors.slice(0, 5).map((c) => h("button", { class: "toprow", type: "button", onclick: () => { haptic("tap"); go({ name: "client", company: c.company, from: "panel" }); } },
       h("span", { class: "n" }, c.company), h("b", {}, short(c.owed)))),
     st.debtors.length ? null : h("div", { class: "meta" }, "Qarzdor yo'q")));
+  const ren = (dashData && dashData.renewals) || [];
+  if (ren.length) s.append(h("section", { class: "card" }, h("div", { class: "ct" }, h("span", {}, "Shartnoma yilligi yaqin"), h("small", {}, "30 kun ichida")),
+    ren.slice(0, 6).map((x) => h("button", { class: "toprow", type: "button", onclick: () => { haptic("tap"); go({ name: "client", company: x.company, from: "panel" }); } },
+      h("span", { class: "n" }, x.company), h("span", { class: "when" }, x.date.slice(0, 5) + " · " + (x.days ? x.days + " kun" : "bugun")))),
+    ren.length > 6 ? h("div", { class: "meta" }, "yana " + (ren.length - 6) + " ta") : null));
 }
 
 function renderList(s) {
@@ -506,6 +522,8 @@ function renderClient(s) {
   if (!c) return go({ name: back });
   s.append(h("div", { class: "head" }, avatar(c.company), h("div", { class: "body" }, h("h1", {}, c.company),
     h("div", { class: "meta" }, c.owed > 0 ? "Jami qarz: " + money(c.owed) + " so'm" : "Qarzi yo'q"))));
+  if (c.owed > 0) s.append(h("button", { class: "btn ghost", type: "button", style: "margin:0 0 6px",
+    onclick: () => { haptic("tap"); go({ name: "remind", company: c.company }); } }, icon("bell"), "Mijozga eslatma matni"));
   s.append(h("div", { class: "sectitle" }, "Litsenziyani tanlang"));
   const list = h("div", { class: "list" });
   c.rows.forEach((r, i) => list.append(h("button", { class: "lic", style: `animation-delay:${i * 30}ms`, onclick: () => { haptic("tap"); go({ name: "pay", row: r.row, company: c.company }); } },
@@ -515,6 +533,43 @@ function renderClient(s) {
     r.unpaid.length ? h("div", { class: "months", "aria-label": "To'lanmagan oylar" }, r.unpaid.slice(0, 3).map((m) => h("span", { class: "mo" }, m)),
       r.unpaid.length > 3 ? h("span", { class: "mo more" }, "+" + (r.unpaid.length - 3) + " oy") : null) : null)));
   s.append(list);
+}
+
+const monthKey = (label) => { const [m, y] = String(label).split(" "); return y + "-" + String(UZM.indexOf(m) + 1).padStart(2, "0"); };
+
+/** A polite payment reminder for the client, built from the overdue months of all its licences. */
+function remindText(c) {
+  const ms = [...new Set(c.rows.flatMap((r) => r.due || []))].sort((a, b) => (monthKey(a) < monthKey(b) ? -1 : 1));
+  let period = "";
+  if (ms.length === 1) period = ms[0] + " oyi";
+  else if (ms.length > 1) {
+    const [m1, y1] = ms[0].split(" "), last = ms[ms.length - 1];
+    period = (y1 === last.split(" ")[1] ? m1 : ms[0]) + " – " + last + " oylari";
+  }
+  const name = c.company.replace(/["«»]/g, "").replace(/\s+/g, " ").trim();
+  return "Assalomu alaykum!\n\nHurmatli «" + name + "» rahbariyati, BIS xizmatlari bo'yicha " + (period ? period + " uchun " : "")
+    + "to'lov muddati o'tgan. Qarzdorlik summasi: " + money(c.owed) + " so'm.\n\n"
+    + "Iltimos, to'lovni imkon qadar tezroq amalga oshirishingizni so'raymiz. Savollar bo'lsa, bemalol murojaat qiling.\n\nHurmat bilan,\nBIS jamoasi";
+}
+
+function renderRemind(s) {
+  const c = companies().find((x) => x.company === view.company);
+  backButton(() => go({ name: "client", company: view.company }));
+  if (!c) return go({ name: "clients" });
+  const box = h("textarea", { class: "remind", "aria-label": "Eslatma matni" });
+  box.value = remindText(c);
+  const msg = h("div", { role: "status" });
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(box.value); } catch (e) { box.focus(); box.select(); try { document.execCommand("copy"); } catch (x) {} }
+    haptic("success");
+    msg.replaceChildren(h("div", { class: "note" }, icon("check"), "Nusxalandi — mijoz chatiga joylashtiring"));
+  };
+  s.append(h("div", { class: "head" }, avatar(c.company), h("div", { class: "body" }, h("h1", {}, "Eslatma"), h("div", { class: "meta" }, c.company))),
+    h("section", { class: "card" }, box), msg,
+    h("button", { class: "btn primary", type: "button", onclick: copy }, icon("copy"), "Nusxalash"));
+  if (tg) s.append(h("button", { class: "btn ghost", type: "button", onclick: () => { haptic("tap"); tg.openTelegramLink("https://t.me/share/url?url=" + encodeURIComponent(box.value)); } }, icon("send"), "Telegram'da yuborish"));
+  s.append(h("div", { class: "note" }, icon("info"), "Matnni o'zgartirishingiz mumkin. Mijozga o'zingiz yuborasiz — bot hech kimga yozmaydi."));
+  if (!tg) s.append(h("button", { class: "btn ghost", onclick: () => go({ name: "client", company: view.company }) }, "Orqaga"));
 }
 
 function renderPay(s) {
@@ -678,7 +733,7 @@ async function load(quiet) {
   try {
     const [c, d] = await Promise.all([api("clients"), api("dash").catch((e) => { dashErr = e.message; return null; })]);
     clients = c.clients;
-    if (d) { dashData = { totals: d.totals, lines: d.lines, history: d.history }; dashErr = ""; }
+    if (d) { dashData = { totals: d.totals, lines: d.lines, history: d.history, week: d.week || null, renewals: d.renewals || [] }; dashErr = ""; }
     const wasStale = stale;
     stale = false;
     writeCache();
