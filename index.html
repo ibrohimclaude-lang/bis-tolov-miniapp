@@ -555,22 +555,24 @@ function askBar() {
   const ask = (q) => { q = String(q || "").trim(); view.ask = q ? { q } : null; render(); };
   const input = h("input", { type: "search", placeholder: "Megaton qancha to'lashi kerak?", value: (view.ask && view.ask.q) || "", "aria-label": "Mijoz haqida savol", enterkeyhint: "search" });
   const hint = h("div", { class: "askhint" }, "🎤 ni bosib gapiring yoki yozing: «kometa noyabr», «megaton 2 oylik»");
+  // Uzbek speech works for sure as a voice message in the bot chat (the bot transcribes it): offer the way back there
+  const toBot = (text) => {
+    hint.replaceChildren(text + " ", tg ? h("button", { class: "link", type: "button", onclick: () => { haptic("tap"); tg.close(); } }, "Bot chatida ovoz bilan so'rash ›") : "");
+  };
   const mic = h("button", { class: "mic", type: "button", "aria-label": "Ovoz bilan so'rash" }, icon("mic"));
   mic.addEventListener("click", () => {
     haptic("tap");
     // Telegram's in-app browser often has no speech recognition: then the keyboard's own microphone does the job
-    if (!SR) {
-      input.focus();
-      hint.textContent = /iPhone|iPad/.test(navigator.userAgent)
-        ? "iPhone: o'zbekcha gapirish uchun bot chatiga 🎤 ovozli xabar yuboring. Yoki klaviatura 🎤 bilan ruscha ayting: «Мегатон за ноябрь»"
-        : "Klaviaturadagi 🎤 tugmasini bosib gapiring, so'ng «Qidirish»ni bosing";
+    // iPhone has no Uzbek speech recognition at all: send the user to the bot, where Uzbek voice works
+    if (!SR || /iPhone|iPad/.test(navigator.userAgent)) {
+      toBot("O'zbekcha ovozni bot taniydi: bot chatida 🎤 ni bosib ushlab gapiring.");
       return;
     }
     const rec = new SR();
     rec.lang = "uz-UZ"; rec.interimResults = false; rec.maxAlternatives = 1;
     mic.classList.add("on"); hint.textContent = "Tinglayapman…";
     rec.onresult = (e) => { const t = e.results[0][0].transcript; input.value = t; ask(t); };
-    rec.onerror = (e) => { hint.textContent = e.error === "not-allowed" ? "Mikrofonga ruxsat berilmadi — klaviaturadagi 🎤 bilan ayting" : "Ovoz tanilmadi — yana urinib ko'ring yoki klaviaturadagi 🎤 bilan ayting"; };
+    rec.onerror = (e) => { toBot(e.error === "not-allowed" ? "Mikrofonga ruxsat berilmadi." : "Ovoz tanilmadi."); };
     rec.onend = () => mic.classList.remove("on");
     try { rec.start(); } catch (e) { mic.classList.remove("on"); input.focus(); }
   });
