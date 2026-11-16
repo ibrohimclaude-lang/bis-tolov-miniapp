@@ -559,7 +559,13 @@ function askBar() {
   mic.addEventListener("click", () => {
     haptic("tap");
     // Telegram's in-app browser often has no speech recognition: then the keyboard's own microphone does the job
-    if (!SR) { input.focus(); hint.textContent = "Klaviaturadagi 🎤 tugmasini bosib gapiring, so'ng «Qidirish»ni bosing"; return; }
+    if (!SR) {
+      input.focus();
+      hint.textContent = /iPhone|iPad/.test(navigator.userAgent)
+        ? "iPhone: klaviatura pastidagi 🎤 ni bosib gapiring (ruscha ham bo'ladi: «Мегатон за ноябрь»), so'ng «Найти/Search»ni bosing"
+        : "Klaviaturadagi 🎤 tugmasini bosib gapiring, so'ng «Qidirish»ni bosing";
+      return;
+    }
     const rec = new SR();
     rec.lang = "uz-UZ"; rec.interimResults = false; rec.maxAlternatives = 1;
     mic.classList.add("on"); hint.textContent = "Tinglayapman…";
