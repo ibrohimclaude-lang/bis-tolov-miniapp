@@ -133,6 +133,19 @@ main{max-width:640px;margin:0 auto;padding:max(12px,env(safe-area-inset-top)) 16
 .toprow .n{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .toprow b{color:var(--debt)}
 .toprow .when{color:var(--hint);font-size:12.5px;white-space:nowrap}
+.ask{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+.ask form{flex:1;min-width:0}
+.ask .field{border-color:var(--line)}
+.mic{flex:none;width:48px;height:48px;border:0;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center}
+.mic .ic{width:22px;height:22px}
+.mic.on{animation:micpulse 1s ease-in-out infinite}
+@keyframes micpulse{50%{opacity:.5;transform:scale(1.08)}}
+.askhint{font-size:12.5px;color:var(--hint);margin:0 4px 10px}
+.ans .q{font-size:12.5px;color:var(--hint);margin-bottom:6px}
+.ans .big{font-size:26px;font-family:var(--num-font);font-weight:var(--num-weight);letter-spacing:-.01em;margin:2px 0 8px}
+.ans .ln{display:flex;justify-content:space-between;gap:12px;font-size:13.5px;padding:7px 0;border-top:1px solid var(--line)}
+.ans .ln span:first-child{color:var(--hint)}
+.ans .ln span:last-child{text-align:right}
 .remind{display:block;width:100%;min-height:230px;border:0;background:transparent;color:var(--text);font:inherit;font-size:14.5px;line-height:1.5;resize:vertical;outline:none}
 .link{border:0;background:none;color:var(--accent);font-weight:600;font-size:13px;padding:6px 0;min-height:32px}
 /* bottom navigation */
@@ -259,6 +272,7 @@ const ICONS = {
   send: '<path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/>',
   copy: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
   bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>',
+  mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
   gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
 };
 const UZM = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentyabr", "Oktyabr", "Noyabr", "Dekabr"];
@@ -450,8 +464,119 @@ function areaChart(months) {
   return h("div", { class: "chart" }, svg, h("div", { class: "ax", "aria-hidden": "true" }, months.map((x) => h("span", {}, UZM[x.m - 1].slice(0, 3)))));
 }
 
+// ---------- ask: a spoken or typed question about one client ("megaton qancha to'lashi kerak", "kometa noyabr") ----------
+const CYR = { а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ё: "yo", ж: "j", з: "z", и: "i", й: "y", к: "k", л: "l", м: "m", н: "n", о: "o", п: "p", р: "r", с: "s", т: "t", у: "u", ф: "f", х: "x", ц: "ts", ч: "ch", ш: "sh", щ: "sh", ъ: "", ы: "i", ь: "", э: "e", ю: "yu", я: "ya", ў: "o", қ: "q", ғ: "g", ҳ: "h" };
+// lower case, Cyrillic spelled in Latin letters, apostrophes dropped (to'rt → tort), so speech in either script matches
+const latin = (t) => String(t).toLowerCase().replace(/[а-яёўқғҳ]/g, (c) => (c in CYR ? CYR[c] : c)).replace(/[‘’ʻʼ`']/g, "");
+const wordsOf = (t) => latin(t).replace(/[^0-9a-z]+/g, " ").split(" ").filter(Boolean);
+const NOISE = new Set(["ooo", "mchj", "llc", "ip", "xk", "chp", "ok", "ao"]);
+function lev(a, b) {
+  const d = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    let prev = d[0]; d[0] = i;
+    for (let j = 1; j <= b.length; j++) { const t = d[j]; d[j] = Math.min(d[j] + 1, d[j - 1] + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = t; }
+  }
+  return d[b.length];
+}
+/** Clients whose name words appear in the question (a suffix like "megatonni" or a small mishearing still counts). */
+function findCompanies(words) {
+  const ws = words.filter((w) => w.length >= 3);
+  const scored = companies().map((c) => {
+    let score = 0;
+    wordsOf(c.company).filter((t) => t.length >= 3 && !NOISE.has(t)).forEach((t) => {
+      if (ws.some((w) => w.startsWith(t) || (w.length >= 4 && t.length >= 5 && t.startsWith(w)))) score += 2;
+      else if (t.length >= 5 && ws.some((w) => w.length >= t.length - 1 && lev(w.slice(0, t.length), t) <= (t.length >= 7 ? 2 : 1))) score += 1;
+    });
+    return { c, score };
+  }).filter((x) => x.score > 0).sort((a, b) => b.score - a.score);
+  return scored.filter((x) => x.score === (scored[0] || {}).score).map((x) => x.c);
+}
+/** 1..12 when the question names a month (Uzbek or Russian, any ending), else 0. */
+function monthOf(words) {
+  const STEMS = [/^yanvar/, /^fevral/, /^mart(a|ga|ni|da|dagi|ning|i)?$/, /^aprel/, /^may(a|ga|ni|da|dagi|ning|i)?$/, /^iyun/, /^iyul/, /^avgust/, /^sent(y)?abr/, /^okt(y)?abr/, /^noyabr/, /^dekabr/];
+  for (const w of words) { const i = STEMS.findIndex((re) => re.test(w)); if (i >= 0) return i + 1; }
+  return 0;
+}
+/** "1 oylik", "ikki oy", "3 месяца" → the number of months, else 0. */
+function countOf(text) {
+  const N = { bir: 1, ikki: 2, uch: 3, tort: 4, besh: 5, olti: 6, yetti: 7, sakkiz: 8, toqqiz: 9, on: 10, odin: 1, dva: 2, tri: 3, chetyre: 4, pyat: 5 };
+  const m = latin(text).match(/\b(\d{1,2}|bir|ikki|uch|tort|besh|olti|yetti|sakkiz|toqqiz|on|odin|dva|tri|chetyre|pyat)\s*-?\s*(oy|mesyats|mes\b)/);
+  return m ? (N[m[1]] || Number(m[1]) || 0) : 0;
+}
+const sortMonths = (ms) => [...new Set(ms)].sort((a, b) => (monthKey(a) < monthKey(b) ? -1 : 1));
+function periodOf(ms) {
+  if (ms.length < 2) return ms[0] || "";
+  const [m1, y1] = ms[0].split(" "), last = ms[ms.length - 1];
+  return (y1 === last.split(" ")[1] ? m1 : ms[0]) + " – " + last + " (" + ms.length + " oy)";
+}
+/** What one licence owes for one month (yyyy-MM). */
+function rowMonth(r, key) {
+  if (r.partial && monthKey(r.partial.label) === key) return { owe: r.monthly - r.partial.value, text: "qoldiq " + money(r.monthly - r.partial.value) };
+  if ((r.unpaid || []).some((l) => monthKey(l) === key)) return { owe: r.monthly, text: money(r.monthly) + " so'm" };
+  const line = dashData && dashData.lines.find((l) => l.row === r.row), paid = line ? Number(line["m" + key.replace("-", "_")]) || 0 : 0;
+  return { owe: 0, text: paid > 0 ? "to'langan ✓" : "shartnomada yo'q" };
+}
+
+function askAnswer(a) {
+  const words = wordsOf(a.q), month = monthOf(words), count = month ? 0 : countOf(a.q);
+  const cs = a.pick ? companies().filter((c) => c.company === a.pick) : findCompanies(words);
+  const heard = h("div", { class: "q" }, "«" + a.q + "»");
+  if (!cs.length) return h("section", { class: "card ans" }, heard, h("div", { class: "note bad", style: "margin:0" }, icon("alert"), "Mijoz topilmadi. Nomini aniqroq ayting, masalan: «Megaton qancha to'lashi kerak»"));
+  if (cs.length > 1) return h("section", { class: "card ans" }, heard, h("div", { class: "ct" }, h("span", {}, "Qaysi mijoz?")),
+    cs.slice(0, 6).map((c) => h("button", { class: "toprow", type: "button", onclick: () => { haptic("tap"); view.ask = Object.assign({}, a, { pick: c.company }); render(); } },
+      h("span", { class: "n" }, c.company), c.owed > 0 ? h("b", {}, short(c.owed)) : h("span", { class: "when" }, "qarzi yo'q"))));
+  const c = cs[0], monthly = c.rows.reduce((t, r) => t + r.monthly, 0);
+  let title, total, lines;
+  if (month) {
+    // the month in the year where this client still owes it, otherwise this year
+    const mm = String(month).padStart(2, "0");
+    const key = sortMonths(c.rows.flatMap((r) => r.unpaid || [])).map(monthKey).find((k) => k.slice(5) === mm) || new Date().getFullYear() + "-" + mm;
+    const parts = c.rows.map((r) => [r.type + " ×" + r.qty, rowMonth(r, key)]);
+    total = parts.reduce((t, p) => t + p[1].owe, 0);
+    title = UZM[month - 1] + " " + key.slice(0, 4) + " uchun to'lash kerak";
+    lines = parts.map((p) => [p[0], p[1].text]);
+  } else if (count) {
+    total = monthly * count; title = count + " oylik to'lov";
+    lines = c.rows.map((r) => [r.type + " ×" + r.qty, money(r.monthly * count) + " so'm"]);
+  } else {
+    total = c.owed; title = c.owed > 0 ? "Jami qarz" : "Qarzi yo'q";
+    const due = sortMonths(c.rows.flatMap((r) => r.due || []));
+    lines = (due.length ? [["To'lanmagan oylar", periodOf(due)]] : []).concat([["Oylik to'lov", money(monthly) + " so'm"]]);
+  }
+  return h("section", { class: "card ans", "aria-live": "polite" }, heard,
+    h("div", { class: "ct" }, h("span", {}, c.company)),
+    h("div", { class: "meta" }, title), h("div", { class: "big" }, money(total) + " so'm"),
+    lines.map(([k, v]) => h("div", { class: "ln" }, h("span", {}, k), h("span", {}, v))),
+    h("button", { class: "btn primary", type: "button", onclick: () => { haptic("tap"); go({ name: "client", company: c.company, from: "panel" }); } }, icon("pay"), "To'lov kiritish"));
+}
+
+function askBar() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const ask = (q) => { q = String(q || "").trim(); view.ask = q ? { q } : null; render(); };
+  const input = h("input", { type: "search", placeholder: "Megaton qancha to'lashi kerak?", value: (view.ask && view.ask.q) || "", "aria-label": "Mijoz haqida savol", enterkeyhint: "search" });
+  const hint = h("div", { class: "askhint" }, "🎤 ni bosib gapiring yoki yozing: «kometa noyabr», «megaton 2 oylik»");
+  const mic = h("button", { class: "mic", type: "button", "aria-label": "Ovoz bilan so'rash" }, icon("mic"));
+  mic.addEventListener("click", () => {
+    haptic("tap");
+    // Telegram's in-app browser often has no speech recognition: then the keyboard's own microphone does the job
+    if (!SR) { input.focus(); hint.textContent = "Klaviaturadagi 🎤 tugmasini bosib gapiring, so'ng «Qidirish»ni bosing"; return; }
+    const rec = new SR();
+    rec.lang = "uz-UZ"; rec.interimResults = false; rec.maxAlternatives = 1;
+    mic.classList.add("on"); hint.textContent = "Tinglayapman…";
+    rec.onresult = (e) => { const t = e.results[0][0].transcript; input.value = t; ask(t); };
+    rec.onerror = (e) => { hint.textContent = e.error === "not-allowed" ? "Mikrofonga ruxsat berilmadi — klaviaturadagi 🎤 bilan ayting" : "Ovoz tanilmadi — yana urinib ko'ring yoki klaviaturadagi 🎤 bilan ayting"; };
+    rec.onend = () => mic.classList.remove("on");
+    try { rec.start(); } catch (e) { mic.classList.remove("on"); input.focus(); }
+  });
+  const form = h("form", { onsubmit: (e) => { e.preventDefault(); input.blur(); ask(input.value); } }, h("label", { class: "field" }, icon("search"), input));
+  input.addEventListener("input", () => { if (!input.value && view.ask) { view.ask = null; render(); } });
+  return [h("div", { class: "ask" }, form, mic), hint];
+}
+
 function renderPanel(s) {
   topBar(s, "Dashboard", today() + " holatiga");
+  s.append(...askBar());
+  if (view.ask && view.ask.q) s.append(askAnswer(view.ask));
   const st = panelStats();
   s.append(heroCard(st), h("div", { class: "kpis" },
     h("div", { class: "kpi" }, h("div", { class: "l" }, "Oylik tushum"), h("div", { class: "v" }, st.monthly != null ? mln(st.monthly) : "—"), h("div", { class: "d" }, "faol xizmatlar")),
